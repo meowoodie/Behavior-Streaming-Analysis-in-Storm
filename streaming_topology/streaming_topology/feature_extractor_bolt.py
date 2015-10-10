@@ -14,7 +14,8 @@ class FeatureExtractorBolt(SimpleBolt):
     OUTPUT_FIELDS = FEATURE
 
     def initialize(self):
-        self.words = defaultdict(int)
+        # self.words = defaultdict(int)
+        pass
 
     def process_tuple(self, tup):
         _user_id, _type, _behavior = tup.values
