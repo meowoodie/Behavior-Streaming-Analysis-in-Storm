@@ -13,15 +13,15 @@ class FeatureExtractorBolt(SimpleBolt):
 
     OUTPUT_FIELDS = FEATURE
 
-    def initialize(self):
+    # def initialize(self):
         # self.words = defaultdict(int)
-        pass
+        # pass
 
     def process_tuple(self, tup):
         _user_id, _type, _behavior = tup.values
         timestamp = _behavior["timestamp"]
         # print _user_id, _type, _behavior
-        log.debug("{0} {1} {2}".format(_user_id, _type, timestamp))
+        log.debug(_user_id + " " + _type + " " + str(timestamp))
         # word, = tup.values
         # self.words[word] += 1
         # log.debug("{0} {1}".format(word, self.words[word]))
