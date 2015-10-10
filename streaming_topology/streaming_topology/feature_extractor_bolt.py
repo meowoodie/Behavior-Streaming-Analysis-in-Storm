@@ -20,8 +20,8 @@ class FeatureExtractorBolt(SimpleBolt):
     def process_tuple(self, tup):
         _user_id, _type, _behavior = tup.values
         # timestamp = _behavior["timestamp"]
-        print _user_id, _type, _behavior
-        # log.debug(_user_id + " " + _type + " " + str(timestamp))
+        # print _user_id, _type, _behavior
+        log.debug(_user_id + " " + _type)
         # word, = tup.values
         # self.words[word] += 1
         # log.debug("{0} {1}".format(word, self.words[word]))
