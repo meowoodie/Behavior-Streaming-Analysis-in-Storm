@@ -1,0 +1,19 @@
+# Behavior Streaming Topology
+# Author:    Woodie
+# UpdatedAt: Fri, 9 Oct, 2015	
+# 
+name: streaming_topology
+
+topology:
+    - spout:
+        name: user_behavior_spout
+        module: streaming_topology.user_behavior_spout
+
+    - bolt:
+        name: feature_extractor_bolt
+        module: streaming_topology.feature_extractor_bolt
+        groupings:
+            - fields_grouping:
+                component: user_behavior_spout
+                fields:
+                    - userId
