@@ -2,7 +2,7 @@ import logging
 import random
 
 from pyleus.storm import Spout
-log = logging.getLogger('counter')
+log = logging.getLogger("user_behavior")
 
 USER_BEHAVIORS_TEST = (
     {"_id": "55f7d37a7420230d7866e41b","type": "motion","motionProb": {"riding": 0.10000000000000000555,"walking": 0.84722632391300500831,"running": 0.75474730745042928337,"driving": 0.99396194970081053199,"sitting": 0.99996538633792275697},"timestamp": 1442304337731.0,"createdAt": 1442304890053,"updatedAt": 1442304890053,"userId": "55f7d1057420230d7866e425"},

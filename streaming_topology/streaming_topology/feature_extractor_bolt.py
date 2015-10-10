@@ -4,7 +4,7 @@ import logging
 
 from pyleus.storm import SimpleBolt
 
-log = logging.getLogger('counter')
+log = logging.getLogger("feature_extractor")
 
 FEATURE = namedtuple("userId", "type", "timestamp")
 
@@ -21,7 +21,7 @@ class FeatureExtractorBolt(SimpleBolt):
         _user_id, _type, _behavior = tup.values
         timestamp = _behavior["timestamp"]
         # print _user_id, _type, _behavior
-        log.debug("{0} {1}".format(_user_id, _type, timestamp))
+        log.debug("{0} {1} {2}".format(_user_id, _type, timestamp))
         # word, = tup.values
         # self.words[word] += 1
         # log.debug("{0} {1}".format(word, self.words[word]))
