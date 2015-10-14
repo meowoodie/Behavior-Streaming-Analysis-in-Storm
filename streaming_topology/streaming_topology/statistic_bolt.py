@@ -13,8 +13,10 @@ log = logging.getLogger("feature_extractor")
 
 class StatisticBolt(SimpleBolt):
 
-    # OUTPUT_FIELDS = FEATURE
-    TAG = '''|---<Statistic Bolt>---|\n'''
+    OUTPUT_FIELDS = {
+        "motionProcessingStream": ["userId", "motionStatistics"],
+        "locationProcessingStream": ["userId", "locationStatistics"]
+    }
 
     def initialize(self):
         # The default window will be a empty array. Every element in array will be a integrated tuple of info.
@@ -37,37 +39,34 @@ class StatisticBolt(SimpleBolt):
         self.feature_window = defaultdict(default_window)
         # vector is used for classifying and outputting result.
         self.feature_statistic = defaultdict(default_statistic)
-        #
+        # log the timestamp of last tick process.
         self.last_timestamp = arrow.utcnow().timestamp
 
     def process_tick(self):
         # Output log to file.
         log_bolt_tick = "[%s] tick tuple was received." % arrow.utcnow()
         log.debug(log_bolt_tick)
-        log_bolt_window = ""
-        for user_id, value in self.feature_window.iteritems():
-            log_bolt_window += "Info of User %s \n===================================\n" % user_id
-            for type, behaviors in value.iteritems():
-                log_bolt_window += "In %s Feature Window\n-----------------------------------\n" % type
-                for tuple in behaviors:
-                    log_bolt_window += "[%s] User Id: %s, Data Id: %s, Data content: %s\n" % \
-                                    (arrow.get(tuple["timestamp"]), user_id, tuple["_id"], tuple)
-        log.debug(log_bolt_window)
+        # log_bolt_window = ""
+        # for user_id, value in self.feature_window.iteritems():
+        #     log_bolt_window += "Info of User %s \n===================================\n" % user_id
+        #     for type, behaviors in value.iteritems():
+        #         log_bolt_window += "In %s Feature Window\n-----------------------------------\n" % type
+        #         for tuple in behaviors:
+        #             log_bolt_window += "[%s] User Id: %s, Data Id: %s, Data content: %s\n" % \
+        #                             (arrow.get(tuple["timestamp"]), user_id, tuple["_id"], tuple)
+        # log.debug(log_bolt_window)
         log_bolt_statistic = ""
         for user_id, value in self.feature_statistic.iteritems():
             log_bolt_statistic += "Statistic of User %s \n===================================\n" % user_id
             for type, statistic in value.iteritems():
                 log_bolt_statistic += "In %s Feature Window\n-----------------------------------\n" % type
                 for item, value in statistic.iteritems():
-                    log_bolt_statistic += "[%s] %s" % (item, value)
+                    log_bolt_statistic += "[%s] %s\n" % (item, value)
         log.debug(log_bolt_statistic)
-        # Emit the feature to the next bolt.
-        # for user_id, value in self.feature_window.iteritems():
-        #     for type, behavior in value.iteritems():
-        #         log_bolt_window = "In %s Feature Window\n=================\n" % type
-        #         log_bolt_window += "[%s] User Id: %s, Data Id: %s, Data content: %s\n" % \
-        #                            (user_id, arrow.get(behavior["timestamp"]), behavior["_id"], behavior)
-        #     log.debug(log_bolt_window)
+        # Emit the statistics of feature to the next bolts.
+        for user_id, value in self.feature_statistic.iteritems():
+            self.emit([user_id, value["location"]], stream="locationProcessingStream")
+            self.emit([user_id, value["motion"]], stream="motionProcessingStream")
         # Clear the buffer once processing was over.
         self.last_timestamp = arrow.utcnow().timestamp
         self.feature_window.clear()
@@ -81,7 +80,8 @@ class StatisticBolt(SimpleBolt):
 
         # If memory is overflow, it should be delete.
         # It is used for logging info.
-        self.feature_window[_user_id][_type].append(_behavior)
+        # self.feature_window[_user_id][_type].append(_behavior)
+
         # Calculate feature statistic in the window.
         # - start time of feature window
         if arrow.get(_behavior["timestamp"]).timestamp < self.feature_statistic[_user_id][_type]["start_time"]:
@@ -108,14 +108,10 @@ class StatisticBolt(SimpleBolt):
             for motion, prob in _behavior["motionProb"].iteritems():
                 self.feature_statistic[_user_id][_type]["possible_motion"][motion] += prob * w
 
-        # self.emit((word, self.words[word]), anchors=[tup])
-
-
-
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.DEBUG,
-        filename='/tmp/feature_extractor_bolt.log',
+        filename='/tmp/behavior_streaming/bolt/statistic_bolt.log',
         format="%(message)s",
         filemode='a',
     )
