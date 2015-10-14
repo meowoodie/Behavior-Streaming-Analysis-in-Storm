@@ -6,17 +6,14 @@ import logging
 
 from pyleus.storm import SimpleBolt
 
-log = logging.getLogger("feature_extractor")
+log = logging.getLogger("statistic")
 
 # FEATURE = namedtuple("userId", "type", "timestamp")
 
 
 class StatisticBolt(SimpleBolt):
 
-    OUTPUT_FIELDS = {
-        "motionProcessingStream": ["userId", "motionStatistics"],
-        "locationProcessingStream": ["userId", "locationStatistics"]
-    }
+    OUTPUT_FIELDS = ["userId", "statistics"]
 
     def initialize(self):
         # The default window will be a empty array. Every element in array will be a integrated tuple of info.
@@ -64,9 +61,8 @@ class StatisticBolt(SimpleBolt):
                     log_bolt_statistic += "[%s] %s\n" % (item, value)
         log.debug(log_bolt_statistic)
         # Emit the statistics of feature to the next bolts.
-        for user_id, value in self.feature_statistic.iteritems():
-            self.emit([user_id, value["location"]], stream="locationProcessingStream")
-            self.emit([user_id, value["motion"]], stream="motionProcessingStream")
+        for user_id, statistic in self.feature_statistic.iteritems():
+            self.emit((user_id, statistic))
         # Clear the buffer once processing was over.
         self.last_timestamp = arrow.utcnow().timestamp
         self.feature_window.clear()
