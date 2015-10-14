@@ -19,3 +19,13 @@ topology:
                 fields:
                     - userId
                     - type
+
+    - bolt:
+        name: feature_bolt
+        module: streaming_topology.feature_bolt
+        groupings:
+            - fields_grouping:
+                component: statistic_bolt
+                fields:
+                    - userId
+                    - statistics
