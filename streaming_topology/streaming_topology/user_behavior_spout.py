@@ -38,7 +38,7 @@ class UserBehaviorSpout(Spout):
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.DEBUG,
-        filename='/tmp/user_behavior_spout.log',
+        filename='/tmp/behavior_streaming/spout/user_behavior_spout.log',
         format="%(message)s",
         filemode='a',
     )
