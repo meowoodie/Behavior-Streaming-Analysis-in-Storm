@@ -44,13 +44,36 @@ class FeatureBolt(SimpleBolt):
         log.debug(log_bolt_rec)
 
         # Validation of statistics
-        if not self.validateStatistics(_statistics):
+        if not self.validate_statistics(_statistics):
             return
 
-        
+        # Calculate feature vector
+        start_time   = min([_statistics["location"]["start_time"], _statistics["motion"]["start_time"]])
+        end_time     = max([_statistics["location"]["end_time"], _statistics["motion"]["end_time"]])
+        m_motion     = max(_statistics["motion"]["possible_motion"])
+        m_m_prob     = max(self.normalize_possibility_dict(_statistics["motion"]["possible_motion"]).itervalues())
+        m_loc_lv1    = max(_statistics["location"]["possible_location"]["lv1"])
+        m_l_lv1_prob = max(self.normalize_possibility_dict(_statistics["location"]["possible_location"]["lv1"]).itervalues())
+        m_loc_lv2    = max(_statistics["location"]["possible_location"]["lv2"])
+        m_l_lv2_prob = max(self.normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
+        # - prerequisite
+        speed_trace  = self.calculate_speed_trace(_statistics["location"]["gps_trace"])
+        max_speed    = max(speed_trace)
+        min_speed    = min(speed_trace)
+        ave_speed    = sum(speed_trace) / float(len(speed_trace))
 
+        self.feature_vector[_user_id] = (start_time, end_time,
+                                         m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
+                                         max_speed, min_speed, ave_speed)
+        self.emit(self.feature_vector[_user_id])
 
-    def validateStatistics(self, statistics):
+    def calculate_speed_trace(self, gps_trace):
+        return []
+
+    def normalize_possibility_dict(self, possibility_dict):
+        return {}
+
+    def validate_statistics(self, statistics):
         if statistics["location"]["start_time"] == float("inf") or \
                         statistics["motion"]["start_time"] == float("inf") or \
                         statistics["location"]["end_time"] == 0.0 or \
