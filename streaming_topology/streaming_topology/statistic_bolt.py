@@ -95,10 +95,10 @@ class StatisticBolt(SimpleBolt):
             for location_lv2, prob_lv2 in _behavior["poiProbLv2"].iteritems():
                 self.feature_statistic[_user_id][_type]["possible_location"]["lv2"][location_lv2] += prob_lv2 * w
             # - gps trace
-                self.feature_statistic[_user_id][_type]["gps_trace"].append({
-                    "timestamp": _behavior["timestamp"],
-                    "gps": [_behavior["location"]["latitude"], _behavior["location"]["longitude"]]
-                })
+            self.feature_statistic[_user_id][_type]["gps_trace"].append({
+                "timestamp": _behavior["timestamp"],
+                "gps": [_behavior["location"]["latitude"], _behavior["location"]["longitude"]]
+            })
         elif _type == "motion":
             # - Calculate every possible motion's weight.
             for motion, prob in _behavior["motionProb"].iteritems():
