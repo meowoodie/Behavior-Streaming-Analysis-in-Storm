@@ -1,16 +1,39 @@
 from collections import defaultdict
 from collections import namedtuple
 from array import array
+from pyleus.storm import SimpleBolt
 import arrow
 import logging
-from pyleus.storm import SimpleBolt
+
+import math
 
 log = logging.getLogger("feature")
 
 
+def calculate_speed_trace(gps_trace):
+    speed_trace = []
+    last_gps = [-1.0, -1.0]
+    for gps in gps_trace:
+        if last_gps != [-1.0, -1.0]:
+            # Linear distance
+            distence = math.hypot(last_gps[0] - gps[0], last_gps[1] - gps[1])
+            speed_trace.append(distence)
+        last_gps = gps
+    return speed_trace
+
+def normalize_possibility_dict(possibility_dict):
+    factor = 1.0 / sum(possibility_dict.itervalues())
+    for key in possibility_dict:
+        possibility_dict[key] *= factor
+    return possibility_dict
+
+
 class FeatureBolt(SimpleBolt):
+
     def initialize(self):
         default_vector = lambda: [
+            # Length of duration
+            arrow.utcnow().timestamp,
             # Start time of feature
             arrow.utcnow().timestamp,
             # End time of feature
@@ -50,28 +73,24 @@ class FeatureBolt(SimpleBolt):
         # Calculate feature vector
         start_time   = min([_statistics["location"]["start_time"], _statistics["motion"]["start_time"]])
         end_time     = max([_statistics["location"]["end_time"], _statistics["motion"]["end_time"]])
+        length_time  = end_time - start_time
         m_motion     = max(_statistics["motion"]["possible_motion"])
-        m_m_prob     = max(self.normalize_possibility_dict(_statistics["motion"]["possible_motion"]).itervalues())
+        m_m_prob     = max(normalize_possibility_dict(_statistics["motion"]["possible_motion"]).itervalues())
         m_loc_lv1    = max(_statistics["location"]["possible_location"]["lv1"])
-        m_l_lv1_prob = max(self.normalize_possibility_dict(_statistics["location"]["possible_location"]["lv1"]).itervalues())
-        m_loc_lv2    = max(_statistics["location"]["possible_location"]["lv2"])
-        m_l_lv2_prob = max(self.normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
+        m_l_lv1_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv1"]).itervalues())
+        m_loc_lv2 = max(_statistics["location"]["possible_location"]["lv2"])
+        m_l_lv2_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
         # - prerequisite
-        speed_trace  = self.calculate_speed_trace(_statistics["location"]["gps_trace"])
+        speed_trace  = calculate_speed_trace(_statistics["location"]["gps_trace"])
+        # About speed in feature
         max_speed    = max(speed_trace)
         min_speed    = min(speed_trace)
         ave_speed    = sum(speed_trace) / float(len(speed_trace))
 
-        self.feature_vector[_user_id] = (start_time, end_time,
+        self.feature_vector[_user_id] = (length_time, start_time, end_time,
                                          m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
                                          max_speed, min_speed, ave_speed)
         self.emit(self.feature_vector[_user_id])
-
-    def calculate_speed_trace(self, gps_trace):
-        return []
-
-    def normalize_possibility_dict(self, possibility_dict):
-        return {}
 
     def validate_statistics(self, statistics):
         if statistics["location"]["start_time"] == float("inf") or \
