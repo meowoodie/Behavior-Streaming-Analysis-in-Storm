@@ -9,6 +9,20 @@ import math
 
 log = logging.getLogger("feature")
 
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    m = 6367 * c * 1000
+    return m
 
 def calculate_speed_trace(gps_trace):
     speed_trace = []
@@ -19,14 +33,10 @@ def calculate_speed_trace(gps_trace):
             cur_gps       = gps_poi["gps"]
             cur_timestamp = gps_poi["timestamp"]
             if cur_timestamp > last_timestamp:
-                distence = math.hypot(last_gps[0] - cur_gps[0], last_gps[1] - cur_gps[1])
+                distence = haversine(last_gps[1], last_gps[0], cur_gps[1], cur_gps[0])
                 interval = cur_timestamp - last_timestamp
                 speed    = distence / interval
                 speed_trace.append(speed)
-            else:
-                log_bolt_error = "Error [calculate_speed_trace] current timestamp %s was smaller than last timestamp %s" % \
-                                 (cur_timestamp, last_timestamp)
-                log.error(log_bolt_error)
         last_gps = gps_poi["gps"]
         last_timestamp = gps_poi["timestamp"]
     return speed_trace
@@ -92,7 +102,7 @@ class FeatureBolt(SimpleBolt):
         m_l_lv2_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
         # - prerequisite
         speed_trace  = calculate_speed_trace(
-            sorted(_statistics["location"]["gps_trace"], key=lambda gps_poi: -1 * gps_poi["timestamp"])
+            sorted(_statistics["location"]["gps_trace"], key=lambda gps_poi: gps_poi["timestamp"])
         )
         # About speed in feature
         max_speed    = max(speed_trace)
@@ -104,7 +114,7 @@ class FeatureBolt(SimpleBolt):
                                          max_speed, min_speed, ave_speed)
 
         # Output log to file.
-        log_bolt_feature = "\n[%s] Features for user %s: \n" \
+        log_bolt_feature = "\n[%s] Features for user %s: \n" % (arrow.utcnow(), _user_id) + \
                            "- Total duration:\t%s\n" \
                            "- Start time:\t%s\n" \
                            "- End time:\t%s\n" \
@@ -116,7 +126,7 @@ class FeatureBolt(SimpleBolt):
                            "- location lv2 prob:\t%s\n" \
                            "- Max speed:\t%s\n" \
                            "- Min speed:\t%s\n" \
-                           "- Average speed:\t%s\n"
+                           "- Average speed:\t%s\n" % self.feature_vector[_user_id]
         log.debug(log_bolt_feature)
 
         self.emit(self.feature_vector[_user_id])

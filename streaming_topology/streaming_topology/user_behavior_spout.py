@@ -18,8 +18,8 @@ def gps_generator():
     radius = 10000                         #Choose your own radius
     radiusInDegrees=radius/111300
     r = radiusInDegrees
-    x0 = 40.84
-    y0 = -73.87
+    x0 = 39.0
+    y0 = 116.0
 
     # for i in range(1,100):                 #Choose number of Lat Long to be generated
     u = float(random.uniform(0.0, 1.0))

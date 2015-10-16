@@ -37,7 +37,7 @@ class StatisticBolt(SimpleBolt):
         # vector is used for classifying and outputting result.
         self.feature_statistic = defaultdict(default_statistic)
         # log the timestamp of last tick process.
-        self.last_timestamp = arrow.utcnow().timestamp
+        # self.last_timestamp = arrow.utcnow().timestamp
 
     def process_tick(self):
         # Output log to file.
@@ -64,7 +64,7 @@ class StatisticBolt(SimpleBolt):
         for user_id, statistic in self.feature_statistic.iteritems():
             self.emit((user_id, statistic))
         # Clear the buffer once processing was over.
-        self.last_timestamp = arrow.utcnow().timestamp
+        # self.last_timestamp = arrow.utcnow().timestamp
         self.feature_window.clear()
         self.feature_statistic.clear()
 
@@ -86,7 +86,7 @@ class StatisticBolt(SimpleBolt):
         if arrow.get(_behavior["timestamp"]).timestamp > self.feature_statistic[_user_id][_type]["end_time"]:
             self.feature_statistic[_user_id][_type]["end_time"] = _behavior["timestamp"]
         # weight of current location.
-        w = arrow.get(_behavior["timestamp"]).timestamp - self.last_timestamp
+        w = 1.0 # arrow.get(_behavior["timestamp"]).timestamp - self.last_timestamp
         if _type == "location":
             # - every possible location lv1's weight.
             for location_lv1, prob_lv1 in _behavior["poiProbLv1"].iteritems():
