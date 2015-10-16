@@ -13,12 +13,22 @@ log = logging.getLogger("feature")
 def calculate_speed_trace(gps_trace):
     speed_trace = []
     last_gps = [-1.0, -1.0]
-    for gps in gps_trace:
-        if last_gps != [-1.0, -1.0]:
-            # Linear distance
-            distence = math.hypot(last_gps[0] - gps[0], last_gps[1] - gps[1])
-            speed_trace.append(distence)
-        last_gps = gps
+    last_timestamp = 0
+    for gps_poi in gps_trace:
+        if last_gps != [-1.0, -1.0] or last_timestamp == 0:
+            cur_gps       = gps_poi["gps"]
+            cur_timestamp = gps_poi["timestamp"]
+            if cur_timestamp > last_timestamp:
+                distence = math.hypot(last_gps[0] - cur_gps[0], last_gps[1] - cur_gps[1])
+                interval = cur_timestamp - last_timestamp
+                speed    = distence / interval
+                speed_trace.append(speed)
+            else:
+                log_bolt_error = "Error [calculate_speed_trace] current timestamp %s was smaller than last timestamp %s" % \
+                                 (cur_timestamp, last_timestamp)
+                log.error(log_bolt_error)
+        last_gps = gps_poi["gps"]
+        last_timestamp = gps_poi["timestamp"]
     return speed_trace
 
 def normalize_possibility_dict(possibility_dict):
@@ -81,7 +91,9 @@ class FeatureBolt(SimpleBolt):
         m_loc_lv2 = max(_statistics["location"]["possible_location"]["lv2"])
         m_l_lv2_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
         # - prerequisite
-        speed_trace  = calculate_speed_trace(_statistics["location"]["gps_trace"])
+        speed_trace  = calculate_speed_trace(
+            sorted(_statistics["location"]["gps_trace"], key=lambda gps_poi: -1 * gps_poi["timestamp"])
+        )
         # About speed in feature
         max_speed    = max(speed_trace)
         min_speed    = min(speed_trace)
@@ -90,6 +102,23 @@ class FeatureBolt(SimpleBolt):
         self.feature_vector[_user_id] = (length_time, start_time, end_time,
                                          m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
                                          max_speed, min_speed, ave_speed)
+
+        # Output log to file.
+        log_bolt_feature = "\n[%s] Features for user %s: \n" \
+                           "- Total duration:\t%s\n" \
+                           "- Start time:\t%s\n" \
+                           "- End time:\t%s\n" \
+                           "- Most motion:\t%s\n" \
+                           "- motion prob:\t%s\n" \
+                           "- Most location lv1:\t%s\n" \
+                           "- location lv1 prob:\t%s\n" \
+                           "- Most location lv2:\t%s\n" \
+                           "- location lv2 prob:\t%s\n" \
+                           "- Max speed:\t%s\n" \
+                           "- Min speed:\t%s\n" \
+                           "- Average speed:\t%s\n"
+        log.debug(log_bolt_feature)
+
         self.emit(self.feature_vector[_user_id])
 
     def validate_statistics(self, statistics):
