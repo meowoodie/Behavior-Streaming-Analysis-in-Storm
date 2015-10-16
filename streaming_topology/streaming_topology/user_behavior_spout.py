@@ -2,6 +2,7 @@ import logging
 import random
 import time
 import arrow
+import math
 
 from pyleus.storm import Spout
 log = logging.getLogger("user_behavior")
@@ -13,6 +14,28 @@ USER_BEHAVIORS_TEST = (
     {"_id": "","location": {"latitude": 39.953293000000002166,"__type": "GeoPoint","longitude": 116.35597199999999418},"poiProbLv2": {"hotel": 0.0013929902859461252684,"bus_route": 0.13762320402783395634,"traffic_place": 0.023399720699555766334,"subway": 0.23397248711687815281,"business_building": 0.25510147556772455602,"residence": 0.34821106891773184744,"special_hospital": 0.00029905338433068730892},"poiProbLv1": {"hotel": 0.0013929902859461252684,"traffic": 0.39499541184426789631,"estate": 0.60331254448545634794,"healthcare": 0.00029905338433068730892},"type": "location","timestamp": 1442304300710.0,"createdAt": 1442305338836,"updatedAt": 1442305338836,"userId": "55f7d1057420230d7866e414"}
 )
 
+def gps_generator():
+    radius = 10000                         #Choose your own radius
+    radiusInDegrees=radius/111300
+    r = radiusInDegrees
+    x0 = 40.84
+    y0 = -73.87
+
+    # for i in range(1,100):                 #Choose number of Lat Long to be generated
+    u = float(random.uniform(0.0, 1.0))
+    v = float(random.uniform(0.0, 1.0))
+
+    w = r * math.sqrt(u)
+    t = 2 * math.pi * v
+    x = w * math.cos(t)
+    y = w * math.sin(t)
+
+    x_lat  = x + x0
+    y_long = y + y0
+
+    return x_lat, y_long
+
+
 class UserBehaviorSpout(Spout):
 
     OUTPUT_FIELDS = ["userId", "type", "behavior"]
@@ -20,14 +43,20 @@ class UserBehaviorSpout(Spout):
 
     def next_tuple(self):
         # Delay 2 second in each emitting.
-        time.sleep(2)
+        time.sleep(3)
         behavior = random.choice(USER_BEHAVIORS_TEST)
+
         # It is used for debugging,
         # - generate a new timestamp for a random behavior data.
         # - generate a sequential id for a random behavior data.
-        behavior["timestamp"] = arrow.utcnow().timestamp
+        behavior["timestamp"] = float(arrow.utcnow().timestamp)
+        if behavior["type"] == "location":
+            lat, lon = gps_generator()
+            behavior["location"]["latitude"]  = lat
+            behavior["location"]["longitude"] = lon
         behavior["_id"] = self.debug_id
         self.debug_id += 1
+
         # Output log to file.
         log_cur_spout = "[%s] Data Id: %s, Data content: %s" % (arrow.utcnow(), behavior["_id"], behavior)
         log.debug(log_cur_spout)
