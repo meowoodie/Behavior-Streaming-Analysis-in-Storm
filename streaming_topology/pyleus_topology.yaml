@@ -28,3 +28,12 @@ topology:
                 component: statistic_bolt
                 fields:
                     - userId
+
+    - bolt:
+        name: event_bolt
+        module: streaming_topology.event_bolt
+        groupings:
+            - fields_grouping:
+                component: feature_bolt
+                fields:
+                    - userId
