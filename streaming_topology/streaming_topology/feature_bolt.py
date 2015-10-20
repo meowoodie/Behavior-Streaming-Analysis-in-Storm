@@ -117,6 +117,23 @@ class FeatureBolt(SimpleBolt):
 
         # Add this new feature into db.
         feature_id = insert_new_feature(_user_id, self.feature_vector[_user_id])
+
+        # Output log to file.
+        log_bolt_feature = "\n[%s] Features %s for user %s: \n" % (arrow.utcnow(), feature_id, _user_id) + \
+                           "- Total duration:\t%s\n" \
+                           "- Start time:\t%s\n" \
+                           "- End time:\t%s\n" \
+                           "- Most motion:\t%s\n" \
+                           "- motion prob:\t%s\n" \
+                           "- Most location lv1:\t%s\n" \
+                           "- location lv1 prob:\t%s\n" \
+                           "- Most location lv2:\t%s\n" \
+                           "- location lv2 prob:\t%s\n" \
+                           "- Max speed:\t%s\n" \
+                           "- Min speed:\t%s\n" \
+                           "- Average speed:\t%s\n" % self.feature_vector[_user_id]
+        log.debug(log_bolt_feature)
+
         # Emit this new feature to next bolts.
         self.emit((_user_id, feature_id, self.feature_vector[_user_id]))
 

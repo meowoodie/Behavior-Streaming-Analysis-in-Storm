@@ -1,4 +1,4 @@
-from . import behavior_feature
+from . import user_event
 import arrow
 
 FEATURE_KEY = ["duration", "start_time", "end_time",
@@ -9,9 +9,9 @@ FEATURE_KEY = ["duration", "start_time", "end_time",
 def insert_new_feature(user_id, feature):
     db_obj = {
         "user_id": user_id,
-        "feature": dict(zip(FEATURE_KEY, feature)),
+        "event_prob": {},
         "createdAt": str(arrow.utcnow()),
         "updatedAt": str(arrow.utcnow())
     }
-    return str(behavior_feature.insert_one(db_obj).inserted_id)
+    return str(user_event.insert_one(db_obj).inserted_id)
 
