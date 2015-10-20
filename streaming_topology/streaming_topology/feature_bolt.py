@@ -2,9 +2,9 @@ from collections import defaultdict
 from collections import namedtuple
 from array import array
 from pyleus.storm import SimpleBolt
+from dao.behavior_feature import insert_new_feature
 import arrow
 import logging
-
 import math
 
 log = logging.getLogger("feature")
@@ -49,6 +49,8 @@ def normalize_possibility_dict(possibility_dict):
 
 
 class FeatureBolt(SimpleBolt):
+
+    OUTPUT_FIELDS = ["userId", "featureId", "feature"]
 
     def initialize(self):
         default_vector = lambda: [
@@ -113,23 +115,10 @@ class FeatureBolt(SimpleBolt):
                                          m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
                                          max_speed, min_speed, ave_speed)
 
-        # Output log to file.
-        log_bolt_feature = "\n[%s] Features for user %s: \n" % (arrow.utcnow(), _user_id) + \
-                           "- Total duration:\t%s\n" \
-                           "- Start time:\t%s\n" \
-                           "- End time:\t%s\n" \
-                           "- Most motion:\t%s\n" \
-                           "- motion prob:\t%s\n" \
-                           "- Most location lv1:\t%s\n" \
-                           "- location lv1 prob:\t%s\n" \
-                           "- Most location lv2:\t%s\n" \
-                           "- location lv2 prob:\t%s\n" \
-                           "- Max speed:\t%s\n" \
-                           "- Min speed:\t%s\n" \
-                           "- Average speed:\t%s\n" % self.feature_vector[_user_id]
-        log.debug(log_bolt_feature)
-
-        self.emit(self.feature_vector[_user_id])
+        # Add this new feature into db.
+        feature_id = insert_new_feature(_user_id, self.feature_vector[_user_id])
+        # Emit this new feature to next bolts.
+        self.emit((_user_id, feature_id, self.feature_vector[_user_id]))
 
     def validate_statistics(self, statistics):
         if statistics["location"]["start_time"] == float("inf") or \
