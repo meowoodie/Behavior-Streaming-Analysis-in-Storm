@@ -8,15 +8,16 @@ topology:
     - spout:
         name: user_behavior_spout
         type: kafka
-        #module: streaming_topology.user_behavior_spout
-        # The Kafka topic to stream from.
+        options:
+            #module: streaming_topology.user_behavior_spout
+            # The Kafka topic to stream from.
             # Required.
-            topic: my_topic
+            topic: location
 
             # ZooKeeper connection string. Comma-separated list of ZooKeeper
             # servers.
             # Required.
-            zk_hosts: zookeeper1:2181,zookeeper2:2181
+            zk_hosts: 112.126.80.78:2181
 
             # Root path in ZooKeeper to store consumer offsets.
             # Defaults to: /pyleus-kafka-offsets/<topology name>
@@ -24,7 +25,7 @@ topology:
 
             # Kafka consumer ID.
             # Defaults to: pyleus-<topology name>
-            consumer_id: pyleus-kafka_spout_example
+            consumer_id: pyleus-streaming_topology
 
             # Whether the initial offset should be that specified by
             # start_offset_time (true) or the head of the stream (false).
@@ -37,6 +38,13 @@ topology:
 
             # support binary data like google protobuf
             binary_data: true
+
+    - bolt:
+        name: regularization_bolt
+        module: streaming_topology.regularization_bolt
+        groupings:
+            - shuffle_grouping:
+                component: user_behavior_spout
 
     - bolt:
         name: statistic_bolt
