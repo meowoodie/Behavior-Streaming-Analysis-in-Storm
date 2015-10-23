@@ -97,7 +97,7 @@ class StatisticBolt(SimpleBolt):
             # - gps trace
             self.feature_statistic[_user_id][_type]["gps_trace"].append({
                 "timestamp": _behavior["timestamp"],
-                "gps": [_behavior["location"]["latitude"], _behavior["location"]["longitude"]]
+                "gps": [_behavior["location"]["lat"], _behavior["location"]["lng"]]
             })
         elif _type == "motion":
             # - Calculate every possible motion's weight.
