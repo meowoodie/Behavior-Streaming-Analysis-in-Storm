@@ -11,12 +11,12 @@ class RegularizationBolt(SimpleBolt):
     def process_tuple(self, tup):
         test = tup.values
         log.debug(test)
-        self.emit()
+        # self.emit()
 
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.DEBUG,
-        filename='/tmp/behavior_streaming/bolt/test_bolt.log',
+        filename='/tmp/behavior_streaming/bolt/regularization_bolt.log',
         format="%(message)s",
         filemode='a',
     )
