@@ -87,7 +87,7 @@ topology:
         tick_freq_secs: 30.0
         groupings:
             - fields_grouping:
-                component: user_behavior_spout
+                component: regularization_bolt
                 fields:
                     - userId
                     - type

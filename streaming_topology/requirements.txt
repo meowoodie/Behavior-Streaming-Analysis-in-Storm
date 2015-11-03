@@ -1,2 +1,4 @@
 arrow
+requests==2.5.1
 pymongo
+leancloud-sdk==1.2.2

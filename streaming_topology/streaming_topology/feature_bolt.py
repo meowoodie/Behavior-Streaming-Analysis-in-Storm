@@ -89,51 +89,57 @@ class FeatureBolt(SimpleBolt):
         log.debug(log_bolt_rec)
 
         # Validation of statistics
-        if not self.validate_statistics(_statistics):
-            return
+        #todo below is omitted for debug
+
+        #if not self.validate_statistics(_statistics):
+        #    return
 
         # Calculate feature vector
         start_time   = min([_statistics["location"]["start_time"], _statistics["motion"]["start_time"]])
         end_time     = max([_statistics["location"]["end_time"], _statistics["motion"]["end_time"]])
         length_time  = end_time - start_time
-        m_motion     = max(_statistics["motion"]["possible_motion"])
-        m_m_prob     = max(normalize_possibility_dict(_statistics["motion"]["possible_motion"]).itervalues())
-        m_loc_lv1    = max(_statistics["location"]["possible_location"]["lv1"])
-        m_l_lv1_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv1"]).itervalues())
-        m_loc_lv2 = max(_statistics["location"]["possible_location"]["lv2"])
-        m_l_lv2_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
-        # - prerequisite
-        speed_trace  = calculate_speed_trace(
-            sorted(_statistics["location"]["gps_trace"], key=lambda gps_poi: gps_poi["timestamp"])
-        )
-        # About speed in feature
-        max_speed    = max(speed_trace)
-        min_speed    = min(speed_trace)
-        ave_speed    = sum(speed_trace) / float(len(speed_trace))
 
-        self.feature_vector[_user_id] = (length_time, start_time, end_time,
-                                         m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
-                                         max_speed, min_speed, ave_speed)
+        #todo below is omitted for debug
+        # m_motion     = max(_statistics["motion"]["possible_motion"])
+        # m_m_prob     = max(normalize_possibility_dict(_statistics["motion"]["possible_motion"]).itervalues())
+        # m_loc_lv1    = max(_statistics["location"]["possible_location"]["lv1"])
+        # m_l_lv1_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv1"]).itervalues())
+        # m_loc_lv2 = max(_statistics["location"]["possible_location"]["lv2"])
+        # m_l_lv2_prob = max(normalize_possibility_dict(_statistics["location"]["possible_location"]["lv2"]).itervalues())
+        # # - prerequisite
+        # speed_trace  = calculate_speed_trace(
+        #     sorted(_statistics["location"]["gps_trace"], key=lambda gps_poi: gps_poi["timestamp"])
+        # )
+        # # About speed in feature
+        # max_speed    = max(speed_trace)
+        # min_speed    = min(speed_trace)
+        # ave_speed    = sum(speed_trace) / float(len(speed_trace))
+
+        self.feature_vector[_user_id] = (length_time, start_time, end_time)  #todo below is omitted for debug
+                                         #m_motion, m_m_prob, m_loc_lv1, m_l_lv1_prob, m_loc_lv2, m_l_lv2_prob,
+                                         #max_speed, min_speed, ave_speed)
 
         # Add this new feature into db.
         feature_id = insert_new_feature(_user_id, self.feature_vector[_user_id])
 
         # Output log to file.
-        log_bolt_feature = "\n[%s] Features %s for user %s: \n" % (arrow.utcnow(), feature_id, _user_id) + \
-                           "- Total duration:\t%s\n" \
-                           "- Start time:\t%s\n" \
-                           "- End time:\t%s\n" \
-                           "- Most motion:\t%s\n" \
-                           "- motion prob:\t%s\n" \
-                           "- Most location lv1:\t%s\n" \
-                           "- location lv1 prob:\t%s\n" \
-                           "- Most location lv2:\t%s\n" \
-                           "- location lv2 prob:\t%s\n" \
-                           "- Max speed:\t%s\n" \
-                           "- Min speed:\t%s\n" \
-                           "- Average speed:\t%s\n" % self.feature_vector[_user_id]
-        log.debug(log_bolt_feature)
+        #todo below is omitted for debug
 
+        # log_bolt_feature = "\n[%s] Features %s for user %s: \n" % (arrow.utcnow(), feature_id, _user_id) + \
+        #                    "- Total duration:\t%s\n" \
+        #                    "- Start time:\t%s\n" \
+        #                    "- End time:\t%s\n" \
+        #                    "- Most motion:\t%s\n" \
+        #                    "- motion prob:\t%s\n" \
+        #                    "- Most location lv1:\t%s\n" \
+        #                    "- location lv1 prob:\t%s\n" \
+        #                    "- Most location lv2:\t%s\n" \
+        #                    "- location lv2 prob:\t%s\n" \
+        #                    "- Max speed:\t%s\n" \
+        #                    "- Min speed:\t%s\n" \
+        #                    "- Average speed:\t%s\n" % self.feature_vector[_user_id]
+        #log.debug(log_bolt_feature)
+        log.debug("feature generated")
         # Emit this new feature to next bolts.
         self.emit((_user_id, feature_id, self.feature_vector[_user_id]))
 

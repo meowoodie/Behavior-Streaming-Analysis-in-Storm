@@ -9,18 +9,19 @@ class RegularizationBolt(SimpleBolt):
     OUTPUT_FIELDS = ["userId", "type", "behavior"]
 
     def process_tuple(self, tup):
-        _raw_data_str = tup.values[0]
-        _raw_data_dict = json.dumps(_raw_data_str)
+        _raw_data_dict = tup.values[0]
 
-        log.debug(_raw_data_str)
-
-        _key   = _raw_data_dict.keys()[0]
-        _value = _raw_data_dict.value()[0]
-
+        log.debug("_raw_data_dict")
+        log.debug(_raw_data_dict)
+        #_key   = _raw_data_dict.keys()[0]
+        _value = json.loads(_raw_data_dict.values()[0])
+        log.debug(_value.keys())
+        log.debug("fuck regular")
+        log.debug(_value["timestamp"])
         _user_id  = _value.pop("user_id")
         _type     = _value.pop("type")
-        _behavior = _raw_data_dict
-
+        _behavior = _value
+        _behavior["timestamp"] = _behavior["timestamp"] / 1000
         # TODO: do some check.
 
         self.emit((_user_id, _type, _behavior))

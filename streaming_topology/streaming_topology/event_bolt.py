@@ -1,12 +1,73 @@
 from collections import defaultdict
 import arrow
 import logging
-
+from dao.leancloud_dao import save_event
 from pyleus.storm import SimpleBolt
+import random
 
 log = logging.getLogger("event")
 
 class EventBolt(SimpleBolt):
+
+    event_list = [
+        {
+  "user": {
+    "__type": "Pointer",
+    "className": "_User",
+    "objectId": "563065f660b26267d31fad74"
+  },
+  "event": {
+    "work_in_office": 1
+  },
+   "timestamp":1,
+  "endTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T15:20:12.000Z"
+  },
+  "startTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T14:49:22.000Z"
+  }
+},
+        {
+  "user": {
+    "__type": "Pointer",
+    "className": "_User",
+    "objectId": "563065f660b26267d31fad74"
+  },
+  "timestamp": 1,
+  "event": {
+    "dining_in_restaurant": 1
+  },
+  "endTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T15:20:12.000Z"
+  },
+  "startTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T14:49:22.000Z"
+  }
+},
+        {
+  "user": {
+    "__type": "Pointer",
+    "className": "_User",
+    "objectId": "563065f660b26267d31fad74"
+  },
+  "timestamp": 1,
+  "event": {
+    "shopping_in_mall": 1
+  },
+  "endTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T15:20:12.000Z"
+  },
+  "startTime": {
+    "__type": "Date",
+    "iso": "2015-10-29T14:49:22.000Z"
+  }
+}
+    ]
 
     def initialize(self):
         pass
@@ -30,7 +91,13 @@ class EventBolt(SimpleBolt):
         #                    "- Average speed:\t%s\n" % _feature
         # log.debug(log_bolt_feature)
 
-
+        temp = random.choice(self.event_list)
+        temp["user"]["objectId"] = _user_id
+        temp["timestamp"] = arrow.utcnow().timestamp
+        temp["startTime"],temp["endTime"] = _feature[1], _feature[2]
+        log.debug("hi")
+        log.debug(str(arrow.utcnow()))
+        log.debug(save_event(temp))
 
 
 

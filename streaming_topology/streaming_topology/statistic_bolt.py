@@ -60,9 +60,12 @@ class StatisticBolt(SimpleBolt):
                 for item, value in statistic.iteritems():
                     log_bolt_statistic += "[%s] %s\n" % (item, value)
         log.debug(log_bolt_statistic)
+        log.debug("tick statistic 1")
         # Emit the statistics of feature to the next bolts.
         for user_id, statistic in self.feature_statistic.iteritems():
             self.emit((user_id, statistic))
+            log.debug("tick statistic 2")
+
         # Clear the buffer once processing was over.
         # self.last_timestamp = arrow.utcnow().timestamp
         self.feature_window.clear()
@@ -103,6 +106,7 @@ class StatisticBolt(SimpleBolt):
             # - Calculate every possible motion's weight.
             for motion, prob in _behavior["motionProb"].iteritems():
                 self.feature_statistic[_user_id][_type]["possible_motion"][motion] += prob * w
+        log.debug(str(self.feature_statistic))
 
 if __name__ == '__main__':
     logging.basicConfig(
